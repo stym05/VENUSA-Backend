@@ -16,7 +16,47 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from rest_framework.routers import DefaultRouter
+from django.urls import path, include
+
+router = DefaultRouter()
+router.register(r'search', SearchViewSet, basename='search')
+router.register(r'offers', OfferViewSet, basename='offers')
+router.register(r'categories', CategoryViewSet, basename='categories')
+router.register(r'auth', AuthViewSet, basename='auth')
+router.register(r'wishlist', WishlistViewSet, basename='wishlist')
+router.register(r'cart', CartViewSet, basename='cart')
+router.register(r'dashboard', DashboardViewSet, basename='dashboard')
+router.register(r'orders', OrderViewSet, basename='orders')
+router.register(r'suggestions', SuggestionViewSet, basename='suggestions')
+router.register(r'products', ProductDetailViewSet, basename='products')
+
+# Example API endpoints and their functionality:
+"""
+1. Get product details:
+   GET /api/products/{id}/
+   - Returns detailed product information including images, specifications, comments, and ratings
+
+2. Add rating:
+   POST /api/products/{id}/add_rating/
+   {
+     "rating": 5,
+     "review": "Great product!"
+   }
+
+3. Add comment:
+   POST /api/products/{id}/add_comment/
+   {
+     "content": "This is a great product",
+     "parent_id": null  # Optional, for replies
+   }
+
+4. Get ratings summary:
+   GET /api/products/{id}/ratings_summary/
+   - Returns rating statistics and distribution
+"""
 
 urlpatterns = [
+    path('api/', include(router.urls)),
     path('admin/', admin.site.urls),
 ]
