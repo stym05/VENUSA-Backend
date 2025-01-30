@@ -11,6 +11,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.mail import send_mail
 import random
 from django.db.models import Count, Avg
+from.models import Product,OrderItem,Wishlist,Cart,CartItem,Order,Address,ProductRating,ProductComment
+from.serializers import ProductSerializer,CustomerSerializer,WishlistSerializer,CartSerializer,CartItemSerializer,OrderSerializer,AddressSerializer,ProductDetailSerializer,ProductRatingDetailSerializer,ProductCommentSerializer
 
 
 class CustomPagination(PageNumberPagination):

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (
     Customer, Product, Wishlist, Cart, CartItem, 
-    Order, OrderItem, ProductRating, Address
+    Order, OrderItem, ProductRating, Address,ProductImage,ProductSpecification,ProductComment
 )
 from django.contrib.auth.password_validation import validate_password
 

@@ -15,9 +15,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path,include
 from rest_framework.routers import DefaultRouter
 from django.urls import path, include
+from venusa_app.views import (
+    SearchViewSet, OfferViewSet, CategoryViewSet, AuthViewSet,
+    WishlistViewSet, CartViewSet, DashboardViewSet, OrderViewSet,
+    SuggestionViewSet, ProductDetailViewSet
+)
+
+from django.conf import settings
+from django.conf.urls.static import static
 
 router = DefaultRouter()
 router.register(r'search', SearchViewSet, basename='search')
@@ -59,4 +67,6 @@ router.register(r'products', ProductDetailViewSet, basename='products')
 urlpatterns = [
     path('api/', include(router.urls)),
     path('admin/', admin.site.urls),
-]
+     path('api/', include('venusa_app.urls')),  # Include your app URLs
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
