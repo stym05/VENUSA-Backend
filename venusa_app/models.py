@@ -32,6 +32,22 @@ class Address(models.Model):
     def __str__(self):
         return f"{self.customer.username} - {self.street_address}"
 
+# class Product(models.Model):
+#     name = models.CharField(max_length=200)
+#     description = models.TextField()
+#     price = models.DecimalField(max_digits=10, decimal_places=2)
+#     stock = models.IntegerField()
+#     image = models.ImageField(upload_to='products/', null=True, blank=True)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+#     product_related_to = models.CharField(max_length=200)
+#     product_tags = models.CharField(max_length=200)
+
+#     def __str__(self):
+#         return self.name
+
+# models.py - Update the Product model
+
 class Product(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField()
@@ -40,8 +56,8 @@ class Product(models.Model):
     image = models.ImageField(upload_to='products/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    product_related_to = models.CharField(max_length=200)
-    product_tags = models.CharField(max_length=200)
+    product_related_to = models.CharField(max_length=200, blank=True, default='')  # Made optional with default
+    product_tags = models.CharField(max_length=200, blank=True, default='')  # Made optional with default
 
     def __str__(self):
         return self.name
