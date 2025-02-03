@@ -25,4 +25,41 @@ Content-Type: application/json
 }
 
 ###
-GET http://localhost:8000/api/subcategories
+GET http://localhost:8000/api/subcategories/67a04793ed440b07dd9a079f
+
+
+###
+
+GET http://localhost:8000/api/products
+
+
+###
+POST http://localhost:8000/api/products
+Content-Type: application/json
+
+{
+    "name": "Classic Shirt",
+    "description": "A high-quality cotton shirt",
+    "price": 500,
+    "subcategory": "67a048d987fabfe5cc14fc8f", 
+    "images": [
+        "https://ih1.redbubble.net/image.5062340278.3470/ssrco,classic_tee,mens,4a4440:cc103efb7a,front_alt,square_product,600x600.jpg",
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTj4TkZql3aK2QiDF1NFoRu4g_F4mN7PaqlyzRAOQ3WeaMJBfaEitK8pzVwltSqPuDJ8pA&usqp=CAU",
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR0yqFFsjryN3iQC69seh8o0VLflZ1eRhXwn3j3td6Qb_xP1tfrdNqA4SRqWgfWOJ26mbw&usqp=CAU",
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQkRFDxr6uaTgt1pGOXiX1hDuaTPUCvD3do72e6LkD4CwTXNn9FbTFT0iAHvRJVXwythDM&usqp=CAU"
+    ],
+    "colors": ["Red", "Blue", "Black"],
+    "stock": [
+        { "size": "S", "quantity": 10 },
+        { "size": "M", "quantity": 15 },
+        { "size": "L", "quantity": 5 }
+    ],
+    "rating": {
+        "averageRating": 4.5,
+        "totalReviews": 120
+    },
+    "totalSales": 300
+}
+
+###
+GET http://localhost:8000/api/products/subcategory/67a048d987fabfe5cc14fc8f

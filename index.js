@@ -16,10 +16,14 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
 
-
+const corsOptions = {
+  origin: ['http://localhost:8081', "http://139.59.44.49:8081"], // Allow requests only from frontend's port
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type'],
+};
 
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use('/uploads', express.static('uploads'));
 
