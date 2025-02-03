@@ -17,7 +17,7 @@ const PORT = process.env.PORT || 5000;
 
 //http://139.59.44.49:8081
 const corsOptions = {
-  origin: "http://139.59.44.49:8081", // Allow requests only from frontend's port
+  origin: "*", // Allow requests only from frontend's port
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type'],
 };
