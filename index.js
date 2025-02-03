@@ -15,9 +15,9 @@ const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
-
+//http://139.59.44.49:8081
 const corsOptions = {
-  origin: ['http://localhost:8081', "http://139.59.44.49:8081"], // Allow requests only from frontend's port
+  origin: "http://139.59.44.49:8081", // Allow requests only from frontend's port
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type'],
 };
