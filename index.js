@@ -24,7 +24,7 @@ const corsOptions = {
 
 // Middleware
 app.use(cors({
-  origin: ["http://139.59.44.49:8081", "http://venusa.co.in"],
+  origin: ["http://139.59.44.49:8081", "http://venusa.co.in:8081","http://venusa.co.in"],
 }));
 app.use(bodyParser.json());
 app.use('/uploads', express.static('uploads'));
