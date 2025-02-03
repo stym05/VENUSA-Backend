@@ -12,7 +12,7 @@ const subCategoryRoutes = require("./routes/subCategoriesRoutes");
 const productRoutes = require("./routes/productRoutes");
 
 const app = express();
-const server = http.createServer(app);
+// const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
 //http://139.59.44.49:8081
@@ -46,7 +46,7 @@ const startServer = async () => {
   try {
     await connectToDB();
 
-    server.listen(PORT, () => { // Use httpServer instead of app
+    app.listen(PORT, () => { // Use httpServer instead of app
       console.log(`Server is running on port http://localhost:${PORT}`);
     });
   } catch (error) {
