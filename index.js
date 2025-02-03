@@ -23,7 +23,9 @@ const corsOptions = {
 };
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:8081"
+}));
 app.use(bodyParser.json());
 app.use('/uploads', express.static('uploads'));
 
