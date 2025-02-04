@@ -8,11 +8,12 @@ GET http://localhost:8000/api/customer/register
 GET http://localhost:8000/api/categories
 
 ###
-POST http://localhost:8000/api/categories
+POST http://venusa.co.in:8000/api/categories
 Content-Type: application/json
 
 {
-    "name": "women"
+    "name": "men",
+    "bannerImage": "https://as2.ftcdn.net/v2/jpg/01/58/92/19/1000_F_158921970_Gga60XP1e9zs…"
 }
 
 ###
