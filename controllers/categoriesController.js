@@ -5,14 +5,14 @@ const { Category } = Categorys;
 // ✅ Create a new Category
 exports.createCategory = async (req, res) => {
     try {
-        const { name, bannerImage  } = req.body;
+        const { name, categoryImage  } = req.body;
 
         const existingCategory = await Category.findOne({ name });
         if (existingCategory) {
             return res.status(400).json({ success: false, message: "Category already exists" });
         }
 
-        const category = new Category({ name, bannerImage });
+        const category = new Category({ name, categoryImage });
         await category.save();
 
         res.status(201).json({ success: true, message: "Category created successfully", category });

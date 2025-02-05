@@ -11,5 +11,6 @@ router.post("/verify-otp", customerController.verifyOTP);
 router.get("/:id", customerController.getCustomerById);
 router.put("/update", customerController.updateCustomer);
 router.delete("/:id", customerController.deleteCustomer);
+router.get("/",customerController.getCustomer)
 
 module.exports = router;

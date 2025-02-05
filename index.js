@@ -4,12 +4,13 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 dotenv.config();
 const connectToDB = require('./config');
-const http = require("http")
 const customerRoutes = require("./routes/customerRoutes");
 const addressRoutes = require('./routes/customerAddressRoutes');
 const categoryRoutes = require("./routes/categoriesRoutes");
 const subCategoryRoutes = require("./routes/subCategoriesRoutes");
 const productRoutes = require("./routes/productRoutes");
+const wishlistRoutes = require("./routes/wishListRoutes");
+const cartRoutes = require('./routes/cartRoutes');
 
 const app = express();
 // const server = http.createServer(app);
@@ -24,7 +25,7 @@ const corsOptions = {
 
 // Middleware
 app.use(cors({
-  origin: ["http://139.59.44.49:8081", "http://venusa.co.in:8081","http://venusa.co.in"],
+  origin: ["http://139.59.44.49:8081", "http://venusa.co.in:8081","http://venusa.co.in", "http://localhost:8081"],
 }));
 app.use(bodyParser.json());
 app.use('/uploads', express.static('uploads'));
@@ -41,7 +42,8 @@ app.use('/api/addresses', addressRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/subcategories", subCategoryRoutes);
 app.use("/api/products", productRoutes);
-
+app.use('/wishlist', wishlistRoutes);
+app.use('/cart', cartRoutes);
 
 // Start the server
 const startServer = async () => {

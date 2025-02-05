@@ -1,7 +1,8 @@
 const Customers = require("../models/customers");
 const sendOtpEmail = require("../utils/sendEmail");
+const sendMsgToPhone = require("../utils/sendMsgToPhone");
 
-const otpStore = {}; // Temporary storage (use Redis in production)
+
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 // 🔹 Register Customer & Send OTP
@@ -10,19 +11,18 @@ const registerCustomer = async (req, res) => {
         const { phone_number } = req.body;
         // Check if customer already exists
         const existingCustomer = await Customers.Customer.findOne({ phone_number });
-        if (existingCustomer) return res.status(400).json({ message: "Email already registered!" });
+        if (existingCustomer) return res.status(400).json({ message: "User already registered!" });
+        const genratedOtp = generateOTP();
+        const newCustomer = new Customers.Customer({ email: "example@gmail.com", username: "guest user", phone_number, address: "blank", otp: genratedOtp });
 
-        const otp = generateOTP();
-        otpStore[email] = otp; // Store OTP temporarily
+        const resp = await sendMsgToPhone(phone_number, genratedOtp)
+        if (resp.success) {
+            await newCustomer.save();
+            res.status(201).json({ message: "Customer registered. OTP sent to you phone number." });
+        } else {
+            res.status(500).json({ error: "OTP not sent" });
+        }
 
-        // Send OTP via email (Configure transporter)
-        // sendOtpEmail(email, otp);
-
-        // Save unverified customer
-        const newCustomer = new Customers.Customer({ email: "example@gmail.com", username: "guest user", phone_number, address: "blank" });
-        await newCustomer.save();
-
-        res.status(201).json({ message: "Customer registered. OTP sent to email." });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -31,16 +31,34 @@ const registerCustomer = async (req, res) => {
 // 🔹 Verify OTP
 const verifyOTP = async (req, res) => {
     try {
-        const { email, otp } = req.body;
+        const { phone_number, otp } = req.body;
 
-        if (!otpStore[email] || otpStore[email] !== otp) {
+        const existingCustomer = await Customers.Customer.findOne({ phone_number });
+        console.log("existingCustomer is = ", existingCustomer.otp);
+        if(existingCustomer.otp && existingCustomer.otp != otp) {
             return res.status(400).json({ message: "Invalid or expired OTP!" });
         }
 
-        await Customers.Customer.updateOne({ email }, { $set: { isVerified: true } });
-        delete otpStore[email]; // Remove OTP
+        await Customers.Customer.updateOne({ phone_number }, { $set: { isPhoneVerified: true } });
 
-        res.json({ message: "Email verified successfully!" });
+        res.json({
+            success: true,
+            userId: existingCustomer._id,
+            message: "Mobile Number verified successfully!",
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// GET ALL Customers
+
+const getCustomer = async (req, res) => {
+    try {
+        const customer = await Customers.Customer.find();
+        if (!customer) return res.status(404).json({ message: "Customer not found!" });
+
+        res.json(customer);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -87,4 +105,4 @@ const deleteCustomer = async (req, res) => {
     }
 };
 
-module.exports = { registerCustomer, verifyOTP, getCustomerById, updateCustomer, deleteCustomer };
+module.exports = { registerCustomer, verifyOTP, getCustomerById, updateCustomer, deleteCustomer, getCustomer };

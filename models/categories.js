@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 // Category Schema (e.g., Men, Women)
 const CategorySchema = new Schema({
     name: { type: String, required: true, unique: true },
-    bannerImage: { type: String},
+    categoryImage: { type: String},
     subcategories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'SubCategory' }], // References SubCategory
 }, { timestamps: true });
 
