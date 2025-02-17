@@ -11,39 +11,71 @@ const subCategoryRoutes = require("./routes/subCategoriesRoutes");
 const productRoutes = require("./routes/productRoutes");
 const wishlistRoutes = require("./routes/wishListRoutes");
 const cartRoutes = require('./routes/cartRoutes');
-
+const path = require("path");
+const upload = require("./middlewares/upload");
 const app = express();
 // const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
-//http://139.59.44.49:8081
+
 const corsOptions = {
   origin: ["*"], // Allow requests only from frontend's port
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type'],
 };
 
+
+app.set("view engine", "ejs"); // Set EJS as the templating engine
+app.set("views", "./views"); // Views folder
+
 // Middleware
 app.use(cors({
   origin: ["http://139.59.44.49:8081", "http://venusa.co.in:8081","http://venusa.co.in", "http://localhost:8081"],
 }));
 app.use(bodyParser.json());
-app.use('/uploads', express.static('uploads'));
 
+// Server Static files
+app.use('/uploads', express.static('uploads'));
+app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res)=> {
   console.log("Howdy appliation is working fine...")
   res.end("Howdy appliation is working fine...")
 })
 
-// Use Routes
+// Define an upload route
+app.post('/upload', upload.single('upload_file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).send("No file uploaded.");
+  }
+  res.send(`File uploaded: ${req.file.filename}`);
+});
+
+
+app.post('/upload-multiple', upload.array('files', 5), (req, res) => {
+  res.send(`${req.files.length} files uploaded`);
+});
+
+app.get("/index", (req,res) => {
+  return res.render("uploadfiles",(err, html) => {
+    if (err) {
+      console.error("Error rendering page:", err);
+      res.status(500).send("Something went wrong!");
+    } else {
+      res.send(html);
+    }
+  })
+})
+
+
+// REST - API Routes
 app.use("/api/customer", customerRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/subcategories", subCategoryRoutes);
 app.use("/api/products", productRoutes);
-app.use('/wishlist', wishlistRoutes);
-app.use('/cart', cartRoutes);
+app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/cart', cartRoutes);
 
 // Start the server
 const startServer = async () => {

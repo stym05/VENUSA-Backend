@@ -17,6 +17,8 @@ const storage = multer.diskStorage({
 // Initialize multer with storage settings
 const upload = multer({ storage: storage });
 
+
+module.exports = upload;
 // Define an upload route
 // app.post('/upload', upload.single('file'), (req, res) => {
 //   if (!req.file) {
