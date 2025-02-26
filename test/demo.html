@@ -1,31 +1,4 @@
-const nodemailer = require('nodemailer');
-// require("dotenv").config({ path: "../.env" });
-
-// Send OTP via email
-const sendOtpEmail = async (email, otp) => {
-
-  console.log("auth = ", {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS
-  })
-  const transporter = nodemailer.createTransport({
-    host: "smtpout.secureserver.net",
-    port: 465, // Secure port for SMTP (SSL)
-    secure: true, // Use SSL
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_PASS
-    },
-    logger: true,
-    debug: true
-  });
-  
-
-  const mailOptions = {
-    from: process.env.GMAIL_USER,
-    to: email,
-    subject: `VENUSA OTP is: ${otp}`,
-    html: `<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
@@ -79,15 +52,3 @@ const sendOtpEmail = async (email, otp) => {
   </div>
 </body>
 </html>
-`.replace("123456", otp),
-  };
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`Verification email sent to ${email}`);
-  } catch (error) {
-    console.error('Error sending OTP email: ', error);
-  }
-};
-
-module.exports = sendOtpEmail;
-// sendOtpEmail("manojkumarguntreddy.ima@gmail.com", 854125)
