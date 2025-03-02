@@ -10,13 +10,6 @@ const loginUser = async (req, res) => {
         let user;
         if (isEmailValid(userName)) {
             user = await Users.findOne({ email: userName });
-            if(!user.isEmailVerified) {
-                return res.status(401).json({ 
-                    success: false,
-                    msg: "Email is not verified please verify your email. verification mail is sent to your mail",
-                    error: 'Email is not verified'
-                });
-            }
         } else {
             user = await Users.findOne({ phone_number: userName });
         }
@@ -35,11 +28,10 @@ const loginUser = async (req, res) => {
         } else {
             await sendMsgToPhone(userName, otp);
         }
-        return res.status(201).json({
-            message: 'Login successful', response: {
-                code: 201,
+        return res.status(200).json({
+                success: true,
+                code: 200,
                 userId: user._id
-            }
         });
 
     } catch (err) {
@@ -62,7 +54,8 @@ const validateOTPforUsers = async (req, res) => {
             );
             await Users.updateOne({ _id: user._id }, { $set: { otp: null } })
             return res.status(200).json({
-                success: 200,
+                success: true,
+                code: 200,
                 msg: "authentication success",
                 user,
                 authToken: token
