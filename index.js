@@ -12,6 +12,8 @@ const productRoutes = require("./routes/productRoutes");
 const wishlistRoutes = require("./routes/wishListRoutes");
 const cartRoutes = require('./routes/cartRoutes');
 const loginRoutes = require('./routes/loginRoutes');
+const subscriberRoutes = require("./routes/subsciberRoutes");
+const adminRoutes = require("./routes/adminDashboardRoutes");
 const path = require("path");
 const upload = require("./middlewares/upload");
 const app = express();
@@ -78,6 +80,8 @@ app.use("/api/products", productRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/login',loginRoutes);
+app.use("/api/subscriber", subscriberRoutes);
+app.use("/api/dashboard", adminRoutes);
 
 // Start the server
 const startServer = async () => {

@@ -30,4 +30,4 @@ const sendMsgToPhone = async (to, msg) => {
 
 
 module.exports = sendMsgToPhone;
-// sendMsgToPhone(9897144223, 562535);
+// sendMsgToPhone(6281506394, 562535);

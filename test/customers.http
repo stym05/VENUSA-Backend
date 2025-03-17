@@ -1,15 +1,94 @@
 
-GET http://localhost:8000/api/customer/register
+# GET http://localhost:8000/api/customer/register
+
+
+
+# ###
+# #second
+# DELETE   http://localhost:8000/api/categories/67a04793ed440b07dd9a079f
+# Content-Type: application/json
+
+# {
+#     "name": "men",
+#     "categoryImage": "https://as2.ftcdn.net/v2/jpg/01/58/92/19/1000_F_158921970_Gga60XP1e9zs…"
+# }
+
+# ###
+# POST http://venusa.co.in:8000/api/categories
+# Content-Type: application/json
+
+# {
+#     "name": "men",
+#     "categoryImage": "https://as2.ftcdn.net/v2/jpg/01/58/92/19/1000_F_158921970_Gga60XP1e9zs…"
+# }
+
+# ###
+# POST http://localhost:8000/api/subcategories
+# Content-Type: application/json
+
+# {
+#     "category": "67a048ca87fabfe5cc14fc8c",
+#     "name": "bras"
+# }
+
+# ###
+# GET http://localhost:8000/api/subcategories/67a04793ed440b07dd9a079f
+
+
+# ###
+
+# GET http://localhost:8000/api/products
+
+
+# ###
+# POST http://localhost:8000/api/products
+# Content-Type: application/json
+
+# {
+#     "name": "Classic Shirt",
+#     "description": "A high-quality cotton shirt",
+#     "price": 500,
+#     "subcategory": "67a048d987fabfe5cc14fc8f", 
+#     "images": [
+#         "https://ih1.redbubble.net/image.5062340278.3470/ssrco,classic_tee,mens,4a4440:cc103efb7a,front_alt,square_product,600x600.jpg",
+#         "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTj4TkZql3aK2QiDF1NFoRu4g_F4mN7PaqlyzRAOQ3WeaMJBfaEitK8pzVwltSqPuDJ8pA&usqp=CAU",
+#         "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR0yqFFsjryN3iQC69seh8o0VLflZ1eRhXwn3j3td6Qb_xP1tfrdNqA4SRqWgfWOJ26mbw&usqp=CAU",
+#         "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQkRFDxr6uaTgt1pGOXiX1hDuaTPUCvD3do72e6LkD4CwTXNn9FbTFT0iAHvRJVXwythDM&usqp=CAU"
+#     ],
+#     "colors": ["Red", "Blue", "Black"],
+#     "stock": [
+#         { "size": "S", "quantity": 10 },
+#         { "size": "M", "quantity": 15 },
+#         { "size": "L", "quantity": 5 }
+#     ],
+#     "rating": {
+#         "averageRating": 4.5,
+#         "totalReviews": 120
+#     },
+#     "totalSales": 300
+# }
+
+# ###
+# GET http://localhost:8000/api/products/subcategory/67a048d987fabfe5cc14fc8f
 
 
 
 ###
-#second
-GET http://localhost:8000/api/categories
+# POST http://localhost:8000/api/subscriber/create
+# Content-Type: application/json
+
+# {
+#     "email": "abhi2907singh@gmail.com"
+# }
+
+# ###
+# GET http://localhost:8000/api/subscriber/fetch
+# Content-Type: application/json
 
 ###
-POST http://venusa.co.in:8000/api/categories
+PUT  http://localhost:8000/api/categories/67a04793ed440b07dd9a079f
 Content-Type: application/json
+
 
 {
     "name": "men",
@@ -17,50 +96,26 @@ Content-Type: application/json
 }
 
 ###
-POST http://localhost:8000/api/subcategories
+
+GET http://localhost:8000/api/dashboard/getAllTablesData
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YmYyMjExZTM5OGNhYzE3NzYyZTk2MCIsImVtYWlsIjoiYWJoaTI5MDdzaW5naEBnbWFpbC5jb20iLCJpYXQiOjE3NDIxOTEwMzV9.KCQzGdcvf8UW-pJSZgV0MuJxBuIyn6RvZa8bsQ7UrH4
+
+
+###
+
+POST http://localhost:8000/api/login/loginUser
 Content-Type: application/json
 
 {
-    "category": "67a048ca87fabfe5cc14fc8c",
-    "name": "bras"
+    "userName": "9897144223"
 }
 
 ###
-GET http://localhost:8000/api/subcategories/67a04793ed440b07dd9a079f
 
-
-###
-
-GET http://localhost:8000/api/products
-
-
-###
-POST http://localhost:8000/api/products
+POST http://localhost:8000/api/login/validateOTPforUsers
 Content-Type: application/json
 
 {
-    "name": "Classic Shirt",
-    "description": "A high-quality cotton shirt",
-    "price": 500,
-    "subcategory": "67a048d987fabfe5cc14fc8f", 
-    "images": [
-        "https://ih1.redbubble.net/image.5062340278.3470/ssrco,classic_tee,mens,4a4440:cc103efb7a,front_alt,square_product,600x600.jpg",
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTj4TkZql3aK2QiDF1NFoRu4g_F4mN7PaqlyzRAOQ3WeaMJBfaEitK8pzVwltSqPuDJ8pA&usqp=CAU",
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR0yqFFsjryN3iQC69seh8o0VLflZ1eRhXwn3j3td6Qb_xP1tfrdNqA4SRqWgfWOJ26mbw&usqp=CAU",
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQkRFDxr6uaTgt1pGOXiX1hDuaTPUCvD3do72e6LkD4CwTXNn9FbTFT0iAHvRJVXwythDM&usqp=CAU"
-    ],
-    "colors": ["Red", "Blue", "Black"],
-    "stock": [
-        { "size": "S", "quantity": 10 },
-        { "size": "M", "quantity": 15 },
-        { "size": "L", "quantity": 5 }
-    ],
-    "rating": {
-        "averageRating": 4.5,
-        "totalReviews": 120
-    },
-    "totalSales": 300
+    "userId": "67bf2211e398cac17762e960",
+    "otp": "151425"
 }
-
-###
-GET http://localhost:8000/api/products/subcategory/67a048d987fabfe5cc14fc8f
