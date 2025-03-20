@@ -33,7 +33,7 @@ app.set("views", "./views"); // Views folder
 
 // Middleware
 app.use(cors({
-  origin: ["http://139.59.44.49:8081","https://venusa.co.in", "http://localhost:8081"],
+  origin: ["http://139.59.44.49:8081","https://venusa.co.in", "http://localhost:8082"],
 }));
 app.use(bodyParser.json());
 
