@@ -1,12 +1,19 @@
 const Product = require("../models/products");
 const Category = require("../models/categories");
+const fs = require("fs");
+const path = require("path");
 
 const { SubCategory } = Category;
 
-// ✅ Create a new Product
+
 exports.createProduct = async (req, res) => {
     try {
-        const { name, description, price, subcategory, images, colors, stock } = req.body;
+        const { name, description, price, subcategory, colors, stock } = req.body;
+
+        // Ensure at least 4 images are uploaded
+        if (!req.files || req.files.length < 4) {
+            return res.status(400).json({ success: false, message: "Please upload at least 4 images (max 6)" });
+        }
 
         // Check if SubCategory exists
         const subCategoryExists = await SubCategory.findById(subcategory);
@@ -14,7 +21,28 @@ exports.createProduct = async (req, res) => {
             return res.status(404).json({ success: false, message: "SubCategory not found" });
         }
 
-        const product = new Product({ name, description, price, subcategory, images, colors, stock });
+        // Create product first to get its _id
+        const product = new Product({ name, description, price, subcategory, images: [], colors, stock });
+        await product.save();
+
+        // Sanitize product name to use as folder name
+        const sanitizedProductName = name.toLowerCase().replace(/\s+/g, "-"); // Convert spaces to dashes
+        const productFolder = path.join("uploads", `${sanitizedProductName}_${product._id}`);
+
+        // Create folder if it doesn't exist
+        if (!fs.existsSync(productFolder)) {
+            fs.mkdirSync(productFolder, { recursive: true });
+        }
+
+        // Move uploaded files to product-specific folder
+        const images = req.files.map(file => {
+            const newFilePath = path.join(productFolder, file.filename);
+            fs.renameSync(file.path, newFilePath); // Move file
+            return newFilePath.replace(/\\/g, "/"); // Normalize path
+        });
+
+        // Update product with image paths
+        product.images = images;
         await product.save();
 
         // Add product reference to SubCategory
@@ -25,6 +53,7 @@ exports.createProduct = async (req, res) => {
         res.status(500).json({ success: false, message: "Error creating product", error: error.message });
     }
 };
+
 
 // ✅ Get all Products
 exports.getAllProducts = async (req, res) => {
