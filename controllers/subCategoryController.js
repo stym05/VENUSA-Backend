@@ -1,19 +1,21 @@
 
 const Categorys = require("../models/categories");
-
+const fs = require("fs");
+const path = require("path");
 const { SubCategory, Category } = Categorys;
 
 // ✅ Create a new SubCategory
 exports.createSubCategory = async (req, res) => {
     try {
-        const { name, category } = req.body;
+        const { name, category, collection } = req.body;
+        const image = req.file ? req.file.path.replace(/\\/g, "/"): null;
 
         const existingSubCategory = await SubCategory.findOne({ name, category });
         if (existingSubCategory) {
             return res.status(400).json({ success: false, message: "SubCategory already exists in this category" });
         }
 
-        const subCategory = new SubCategory({ name, category });
+        const subCategory = new SubCategory({ name, category, image, collection });
         await subCategory.save();
 
         await Category.findByIdAndUpdate(category, { $push: { subcategories: subCategory._id } });
@@ -27,7 +29,7 @@ exports.createSubCategory = async (req, res) => {
 // ✅ Get all SubCategories
 exports.getAllSubCategories = async (req, res) => {
     try {
-        const subCategories = await SubCategory.find().populate("category");
+        const subCategories = await SubCategory.find();
         res.status(200).json({ success: true, subCategories });
     } catch (error) {
         res.status(500).json({ success: false, message: "Error fetching subcategories", error: error.message });
@@ -50,7 +52,21 @@ exports.getSubCategoriesByCategory = async (req, res) => {
 exports.updateSubCategory = async (req, res) => {
     try {
         const { subCategoryId } = req.params;
-        const updates = req.body;
+        let updates = { ...req.body };
+
+        // Handle image upload
+        if (req.file) {
+            updates.image = req.file.path.replace(/\\/g, "/"); // Normalize path
+
+            // Optional: Delete the old image if it exists
+            const subCategory = await SubCategory.findById(subCategoryId);
+            if (subCategory?.image) {
+                const oldImagePath = path.join(__dirname, "..", subCategory.image);
+                if (fs.existsSync(oldImagePath)) {
+                    fs.unlinkSync(oldImagePath);
+                }
+            }
+        }
 
         const updatedSubCategory = await SubCategory.findByIdAndUpdate(subCategoryId, updates, { new: true });
 
@@ -64,7 +80,7 @@ exports.updateSubCategory = async (req, res) => {
     }
 };
 
-// ✅ Delete SubCategory
+// ✅ Delete SubCategoryhttp://localhost:8000/api/subcategories
 exports.deleteSubCategory = async (req, res) => {
     try {
         const { subCategoryId } = req.params;

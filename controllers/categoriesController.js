@@ -1,11 +1,14 @@
 const Categorys = require("../models/categories");
+const fs = require("fs");
+const path = require("path");
 
 const { Category } = Categorys;
 
 // ✅ Create a new Category
 exports.createCategory = async (req, res) => {
     try {
-        const { name, categoryImage  } = req.body;
+        const { name } = req.body;
+        const categoryImage = req.file ? req.file.path.replace(/\\/g, "/") : null; // Normalize image path
 
         const existingCategory = await Category.findOne({ name });
         if (existingCategory) {
@@ -21,10 +24,11 @@ exports.createCategory = async (req, res) => {
     }
 };
 
+
 // ✅ Get all Categories
 exports.getAllCategories = async (req, res) => {
     try {
-        const categories = await Category.find().populate("subcategories");
+        const categories = await Category.find();
         res.status(200).json({ success: true, categories });
     } catch (error) {
         res.status(500).json({ success: false, message: "Error fetching categories", error: error.message });
@@ -51,10 +55,23 @@ exports.getCategoryById = async (req, res) => {
 exports.updateCategory = async (req, res) => {
     try {
         const { categoryId } = req.params;
-        const updates = req.body;
+        let updates = { ...req.body };
+
+        // Handle image upload
+        if (req.file) {
+            updates.categoryImage = req.file.path.replace(/\\/g, "/"); // Normalize path
+
+            // Optional: Delete old image if a new one is uploaded
+            const category = await Category.findById(categoryId);
+            if (category?.categoryImage) {
+                const oldImagePath = path.join(__dirname, "..", category.categoryImage);
+                if (fs.existsSync(oldImagePath)) {
+                    fs.unlinkSync(oldImagePath);
+                }
+            }
+        }
 
         const updatedCategory = await Category.findByIdAndUpdate(categoryId, updates, { new: true });
-
         if (!updatedCategory) {
             return res.status(404).json({ success: false, message: "Category not found" });
         }

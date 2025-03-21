@@ -14,6 +14,7 @@ const Category = mongoose.model('Category', CategorySchema);
 const SubCategorySchema = new Schema({
     name: { type: String, required: true },
     image: { type:  String },
+    collection: { type: String, default: 'all season' },
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true }, // References Category
     products: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }], // References Product
 }, { timestamps: true });

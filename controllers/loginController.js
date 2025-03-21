@@ -15,14 +15,14 @@ const loginUser = async (req, res) => {
             user = await Users.findOne({ phone_number: userName });
         }
         if (!user) {
-            return res.status(401).json({ 
+            return res.status(401).json({
                 success: false,
                 msg: "Invalid userName",
                 error: 'User not found'
             });
         }
         const otp = Math.floor(100000 + Math.random() * 900000)
-        await Users.updateOne({ _id: user._id}, { $set: { otp: otp } });
+        await Users.updateOne({ _id: user._id }, { $set: { otp: otp } });
         console.log(user)
         if (isEmailValid(userName)) {
             await sendOtpEmail(userName, otp);
@@ -30,9 +30,9 @@ const loginUser = async (req, res) => {
             await sendMsgToPhone(userName, otp);
         }
         return res.status(200).json({
-                success: true,
-                code: 200,
-                userId: user._id
+            success: true,
+            code: 200,
+            userId: user._id
         });
 
     } catch (err) {
@@ -45,9 +45,9 @@ const validateOTPforUsers = async (req, res) => {
     try {
         const { userId, otp } = req.body;
         const user = await Users.findOne({ _id: userId });
-        if(otp == user.otp) {
-            if(!user.isPhoneVerified || !user.isEmailVerified) {
-                Users.updateOne({ _id: user._id }, { $set : { isPhoneVerified: true, isEmailVerified: true } })
+        if (otp == user.otp) {
+            if (!user.isPhoneVerified || !user.isEmailVerified) {
+                Users.updateOne({ _id: user._id }, { $set: { isPhoneVerified: true, isEmailVerified: true } })
             }
             const token = jwt.sign(
                 { id: user._id, email: user.email },
@@ -83,17 +83,17 @@ const createUser = async (req, res) => {
             isAdmin,
             address,
         } = req.body;
-        if(!isEmailValid(email) || !validatePhonetNumber(phone_number)) {
+        if (!isEmailValid(email) || !validatePhonetNumber(phone_number)) {
             res.status(401).json({ error: "phone number or email is not valid" })
         }
-        const user = new Users({email, phone_number, isAdmin, address });
+        const user = new Users({ email, phone_number, isAdmin, address });
         await user.save();
         res.status(200).json({
             success: true,
             userId: user._id,
             msg: "user created successfully please validate email and phone number"
         })
-    }catch(err) {
+    } catch (err) {
         console.log("error", err);
         res.status(400).json({
             error: err
@@ -108,13 +108,13 @@ const loginCustomer = async (req, res) => {
             phone_number
         } = req.body;
         let customer = await Customer.findOne({ phone_number });
-        if(!customer) {
+        if (!customer) {
             // creating new user
             const otp = Math.floor(100000 + Math.random() * 900000)
-            customer = new Customer({ 
-                username: "New User", 
-                phone_number, 
-                email: `user${phone_number}@gmail.com`, 
+            customer = new Customer({
+                username: "New User",
+                phone_number,
+                email: `user${phone_number}@gmail.com`,
                 address: "new user",
                 otp
             });
@@ -125,9 +125,9 @@ const loginCustomer = async (req, res) => {
                 userId: customer._id,
                 msg: "user created successfully please validate phone number"
             })
-        }else {
+        } else {
             const otp = Math.floor(100000 + Math.random() * 900000)
-            await Customer.updateOne({ _id: customer._id}, { $set: { otp: otp } });
+            await Customer.updateOne({ _id: customer._id }, { $set: { otp: otp } });
             await sendMsgToPhone(phone_number, otp);
             res.status(200).json({
                 success: true,
@@ -135,7 +135,7 @@ const loginCustomer = async (req, res) => {
                 msg: `otp send to Mobile Number ${phone_number}`
             })
         }
-    } catch(err) {
+    } catch (err) {
         console.log("error", err);
         res.status(400).json({
             error: err
@@ -148,9 +148,9 @@ const validateOTPforCustomers = async (req, res) => {
     try {
         const { userId, otp } = req.body;
         const customer = await Customer.findOne({ _id: userId });
-        if(otp == customer.otp) {
-            if(!customer.isPhoneVerified || !customer.isEmailVerified) {
-                Users.updateOne({ _id: customer._id }, { $set : { isPhoneVerified: true, isEmailVerified: true } })
+        if (otp == customer.otp) {
+            if (!customer.isPhoneVerified || !customer.isEmailVerified) {
+                Users.updateOne({ _id: customer._id }, { $set: { isPhoneVerified: true, isEmailVerified: true } })
             }
             const token = jwt.sign(
                 { id: customer._id, phone_number: customer.phone_number },
@@ -182,20 +182,20 @@ const reGenrateOTP = async (req, res) => {
             phone_number,
             type
         } = req.body;
-        if(type === "user") {
+        if (type === "user") {
             const user = Users.findOne({ phone_number });
             const otp = Math.floor(100000 + Math.random() * 900000)
-            await Users.updateOne({ _id: user._id}, { $set: { otp: otp } });
+            await Users.updateOne({ _id: user._id }, { $set: { otp: otp } });
             await sendMsgToPhone(phone_number, otp);
             res.status(200).json({
                 success: true,
                 userId: user._id,
                 msg: `otp send to Mobile Number ${phone_number}`
             })
-        }else{
+        } else {
             const customer = Customer.findOne({ phone_number });
             const otp = Math.floor(100000 + Math.random() * 900000)
-            await Customer.updateOne({ _id: customer._id}, { $set: { otp: otp } });
+            await Customer.updateOne({ _id: customer._id }, { $set: { otp: otp } });
             await sendMsgToPhone(phone_number, otp);
             res.status(200).json({
                 success: true,
