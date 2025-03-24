@@ -21,12 +21,26 @@ exports.createProduct = async (req, res) => {
             return res.status(404).json({ success: false, message: "SubCategory not found" });
         }
 
+        // Parse JSON fields safely
+        let parsedColors, parsedStock;
+        try {
+            parsedColors = JSON.parse(colors);
+        } catch (err) {
+            return res.status(400).json({ success: false, message: "Invalid colors format" });
+        }
+
+        try {
+            parsedStock = JSON.parse(stock);
+        } catch (err) {
+            return res.status(400).json({ success: false, message: "Invalid stock format" });
+        }
+
         // Create product first to get its _id
-        const product = new Product({ name, description, price, subcategory, images: [], colors, stock });
+        const product = new Product({ name, description, price, subcategory, images: [], colors: parsedColors, stock: parsedStock });
         await product.save();
 
-        // Sanitize product name to use as folder name
-        const sanitizedProductName = name.toLowerCase().replace(/\s+/g, "-"); // Convert spaces to dashes
+        // Sanitize product name for folder creation
+        const sanitizedProductName = name.toLowerCase().replace(/\s+/g, "-");
         const productFolder = path.join("uploads", `${sanitizedProductName}_${product._id}`);
 
         // Create folder if it doesn't exist
@@ -38,7 +52,7 @@ exports.createProduct = async (req, res) => {
         const images = req.files.map(file => {
             const newFilePath = path.join(productFolder, file.filename);
             fs.renameSync(file.path, newFilePath); // Move file
-            return newFilePath.replace(/\\/g, "/"); // Normalize path
+            return `/uploads/${sanitizedProductName}_${product._id}/${file.filename}`; // Accessible path
         });
 
         // Update product with image paths
@@ -81,23 +95,58 @@ exports.getProductById = async (req, res) => {
     }
 };
 
-// ✅ Update Product
 exports.updateProduct = async (req, res) => {
     try {
         const { productId } = req.params;
-        const updates = req.body;
+        let { name, description, price, subcategory, colors, stock } = req.body;
 
-        const updatedProduct = await Product.findByIdAndUpdate(productId, updates, { new: true });
-
-        if (!updatedProduct) {
+        // Find the product first
+        const product = await Product.findById(productId);
+        if (!product) {
             return res.status(404).json({ success: false, message: "Product not found" });
         }
+
+        // Parse JSON fields safely
+        try {
+            if (colors) colors = JSON.parse(colors);
+            if (stock) stock = JSON.parse(stock);
+        } catch (err) {
+            return res.status(400).json({ success: false, message: "Invalid JSON format for colors or stock" });
+        }
+
+        // Handle image updates
+        let images = product.images; // Keep existing images if no new images are uploaded
+
+        if (req.files && req.files.length > 0) {
+            const sanitizedProductName = product.name.toLowerCase().replace(/\s+/g, "-");
+            const productFolder = path.join("uploads", `${sanitizedProductName}_${product._id}`);
+
+            // Create folder if it doesn't exist
+            if (!fs.existsSync(productFolder)) {
+                fs.mkdirSync(productFolder, { recursive: true });
+            }
+
+            // Move new images and update image paths
+            images = req.files.map(file => {
+                const newFilePath = path.join(productFolder, file.filename);
+                fs.renameSync(file.path, newFilePath); // Move file
+                return `/uploads/${sanitizedProductName}_${product._id}/${file.filename}`;
+            });
+        }
+
+        // Update the product
+        const updatedProduct = await Product.findByIdAndUpdate(
+            productId,
+            { name, description, price, subcategory, colors, stock, images },
+            { new: true, runValidators: true }
+        );
 
         res.status(200).json({ success: true, message: "Product updated successfully", updatedProduct });
     } catch (error) {
         res.status(500).json({ success: false, message: "Error updating product", error: error.message });
     }
 };
+
 
 // ✅ Delete Product
 exports.deleteProduct = async (req, res) => {
@@ -131,14 +180,30 @@ exports.getProductsBySubCategory = async (req, res) => {
 exports.updateStock = async (req, res) => {
     try {
         const { productId } = req.params;
-        const { stock } = req.body; // Array of { size, quantity }
+        let { stock } = req.body; // Expected: Array of { size, quantity }
 
+        // Find the product
         const product = await Product.findById(productId);
         if (!product) {
             return res.status(404).json({ success: false, message: "Product not found" });
         }
 
-        product.stock = stock; // Replace stock array
+        // Parse stock if it's sent as a string
+        try {
+            if (typeof stock === "string") {
+                stock = JSON.parse(stock);
+            }
+        } catch (err) {
+            return res.status(400).json({ success: false, message: "Invalid stock format" });
+        }
+
+        // Validate stock format
+        if (!Array.isArray(stock) || !stock.every(item => item.size && typeof item.quantity === "number")) {
+            return res.status(400).json({ success: false, message: "Stock must be an array of objects with size and quantity" });
+        }
+
+        // Update product stock
+        product.stock = stock;
         await product.save();
 
         res.status(200).json({ success: true, message: "Stock updated successfully", product });
@@ -146,3 +211,4 @@ exports.updateStock = async (req, res) => {
         res.status(500).json({ success: false, message: "Error updating stock", error: error.message });
     }
 };
+
