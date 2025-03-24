@@ -17,5 +17,6 @@ mongodb-data/
 db.json
 *.db
 
+uploads/
 
 
