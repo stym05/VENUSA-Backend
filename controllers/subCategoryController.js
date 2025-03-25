@@ -4,29 +4,60 @@ const fs = require("fs");
 const path = require("path");
 const { SubCategory, Category } = Categorys;
 
-// ✅ Create a new SubCategory
 exports.createSubCategory = async (req, res) => {
     try {
-        const { name, category, collection } = req.body;
-        const image = req.file ? req.file.path.replace(/\\/g, "/"): null;
+        let { name, category, collection } = req.body;
 
+        if (!name || !category) {
+            return res.status(400).json({ success: false, message: "SubCategory name and category are required" });
+        }
+
+        name = name.trim().toLowerCase(); // Normalize name to avoid case-sensitive duplicates
+
+        // Check if the category exists
+        const categoryExists = await Category.findById(category);
+        if (!categoryExists) {
+            return res.status(404).json({ success: false, message: "Category not found" });
+        }
+
+        // Check for existing subcategory with the same name under the same category
         const existingSubCategory = await SubCategory.findOne({ name, category });
         if (existingSubCategory) {
             return res.status(400).json({ success: false, message: "SubCategory already exists in this category" });
         }
 
+        // Handle image upload and store correct path
+        let image = null;
+        if (req.file) {
+            const sanitizedSubCategoryName = name.replace(/\s+/g, "-");
+            const subCategoryFolder = path.join("uploads", `${sanitizedSubCategoryName}_${Date.now()}`);
+
+            // Create folder if it doesn't exist
+            if (!fs.existsSync(subCategoryFolder)) {
+                fs.mkdirSync(subCategoryFolder, { recursive: true });
+            }
+
+            const newFilePath = path.join(subCategoryFolder, req.file.filename);
+            await fs.promises.rename(req.file.path, newFilePath); // Move file safely
+
+            const baseUrl = `${req.protocol}://${req.get("host")}`;
+            image = `${baseUrl}/${newFilePath.replace(/\\/g, "/")}`; // Store full URL
+        }
+
+        // Create subcategory
         const subCategory = new SubCategory({ name, category, image, collection });
         await subCategory.save();
 
+        // Add subcategory reference to Category
         await Category.findByIdAndUpdate(category, { $push: { subcategories: subCategory._id } });
 
         res.status(201).json({ success: true, message: "SubCategory created successfully", subCategory });
     } catch (error) {
-        res.status(500).json({ success: false, message: "Error creating subcategory", error: error.message });
+        console.error("Error creating subcategory:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
     }
 };
 
-// ✅ Get all SubCategories
 exports.getAllSubCategories = async (req, res) => {
     try {
         const subCategories = await SubCategory.find();
@@ -36,7 +67,6 @@ exports.getAllSubCategories = async (req, res) => {
     }
 };
 
-// ✅ Get SubCategories by Category
 exports.getSubCategoriesByCategory = async (req, res) => {
     try {
         const { categoryId } = req.params;
@@ -48,39 +78,57 @@ exports.getSubCategoriesByCategory = async (req, res) => {
     }
 };
 
-// ✅ Update SubCategory
+
 exports.updateSubCategory = async (req, res) => {
     try {
         const { subCategoryId } = req.params;
         let updates = { ...req.body };
 
-        // Handle image upload
-        if (req.file) {
-            updates.image = req.file.path.replace(/\\/g, "/"); // Normalize path
+        // Check if subcategory exists
+        const subCategory = await SubCategory.findById(subCategoryId);
+        if (!subCategory) {
+            return res.status(404).json({ success: false, message: "SubCategory not found" });
+        }
 
-            // Optional: Delete the old image if it exists
-            const subCategory = await SubCategory.findById(subCategoryId);
-            if (subCategory?.image) {
+        // Handle image update
+        if (req.file) {
+            const sanitizedSubCategoryName = subCategory.name.replace(/\s+/g, "-");
+            const subCategoryFolder = path.join("uploads", `${sanitizedSubCategoryName}_${subCategory._id}`);
+
+            // Create folder if it doesn't exist
+            if (!fs.existsSync(subCategoryFolder)) {
+                fs.mkdirSync(subCategoryFolder, { recursive: true });
+            }
+
+            const newFilePath = path.join(subCategoryFolder, req.file.filename);
+            await fs.promises.rename(req.file.path, newFilePath); // Move file safely
+
+            const baseUrl = `${req.protocol}://${req.get("host")}`;
+            updates.image = `${baseUrl}/${newFilePath.replace(/\\/g, "/")}`; // Store full URL
+
+            // Delete old image if it exists
+            if (subCategory.image) {
                 const oldImagePath = path.join(__dirname, "..", subCategory.image);
                 if (fs.existsSync(oldImagePath)) {
-                    fs.unlinkSync(oldImagePath);
+                    try {
+                        await fs.promises.unlink(oldImagePath);
+                    } catch (err) {
+                        console.error("Error deleting old image:", err);
+                    }
                 }
             }
         }
 
+        // Update subcategory
         const updatedSubCategory = await SubCategory.findByIdAndUpdate(subCategoryId, updates, { new: true });
-
-        if (!updatedSubCategory) {
-            return res.status(404).json({ success: false, message: "SubCategory not found" });
-        }
 
         res.status(200).json({ success: true, message: "SubCategory updated successfully", updatedSubCategory });
     } catch (error) {
-        res.status(500).json({ success: false, message: "Error updating subcategory", error: error.message });
+        console.error("Error updating subcategory:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
     }
 };
 
-// ✅ Delete SubCategoryhttp://localhost:8000/api/subcategories
 exports.deleteSubCategory = async (req, res) => {
     try {
         const { subCategoryId } = req.params;

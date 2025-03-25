@@ -10,12 +10,15 @@ exports.createProduct = async (req, res) => {
     try {
         const { name, description, price, subcategory, colors, stock } = req.body;
 
-        // Ensure at least 4 images are uploaded
-        if (!req.files || req.files.length < 4) {
-            return res.status(400).json({ success: false, message: "Please upload at least 4 images (max 6)" });
+        // Ensure at least 4 images but no more than 6
+        if (!req.files || req.files.length < 4 || req.files.length > 6) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Please upload between 4 to 6 images" 
+            });
         }
 
-        // Check if SubCategory exists
+        // Check if subcategory exists
         const subCategoryExists = await SubCategory.findById(subcategory);
         if (!subCategoryExists) {
             return res.status(404).json({ success: false, message: "SubCategory not found" });
@@ -36,7 +39,15 @@ exports.createProduct = async (req, res) => {
         }
 
         // Create product first to get its _id
-        const product = new Product({ name, description, price, subcategory, images: [], colors: parsedColors, stock: parsedStock });
+        const product = new Product({ 
+            name, 
+            description, 
+            price, 
+            subcategory, 
+            images: [], 
+            colors: parsedColors, 
+            stock: parsedStock 
+        });
         await product.save();
 
         // Sanitize product name for folder creation
@@ -48,12 +59,13 @@ exports.createProduct = async (req, res) => {
             fs.mkdirSync(productFolder, { recursive: true });
         }
 
-        // Move uploaded files to product-specific folder
-        const images = req.files.map(file => {
+        // Move uploaded files to product-specific folder and store full URLs
+        const baseUrl = `${req.protocol}://${req.get("host")}`;
+        const images = await Promise.all(req.files.map(async (file) => {
             const newFilePath = path.join(productFolder, file.filename);
-            fs.renameSync(file.path, newFilePath); // Move file
-            return `/uploads/${sanitizedProductName}_${product._id}/${file.filename}`; // Accessible path
-        });
+            await fs.promises.rename(file.path, newFilePath); // Move file safely
+            return `${baseUrl}/${newFilePath.replace(/\\/g, "/")}`; // Full URL
+        }));
 
         // Update product with image paths
         product.images = images;
@@ -64,7 +76,8 @@ exports.createProduct = async (req, res) => {
 
         res.status(201).json({ success: true, message: "Product created successfully", product });
     } catch (error) {
-        res.status(500).json({ success: false, message: "Error creating product", error: error.message });
+        console.error("Error creating product:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
     }
 };
 
@@ -126,12 +139,33 @@ exports.updateProduct = async (req, res) => {
                 fs.mkdirSync(productFolder, { recursive: true });
             }
 
+            // Delete old images if new ones are uploaded
+            for (const image of product.images) {
+                const oldImagePath = path.join(__dirname, "..", image);
+                try {
+                    if (fs.existsSync(oldImagePath)) {
+                        await fs.promises.unlink(oldImagePath);
+                    }
+                } catch (err) {
+                    console.error("Error deleting old image:", err);
+                }
+            }
+
             // Move new images and update image paths
-            images = req.files.map(file => {
+            const baseUrl = `${req.protocol}://${req.get("host")}`;
+            images = await Promise.all(req.files.map(async (file) => {
                 const newFilePath = path.join(productFolder, file.filename);
-                fs.renameSync(file.path, newFilePath); // Move file
-                return `/uploads/${sanitizedProductName}_${product._id}/${file.filename}`;
-            });
+                await fs.promises.rename(file.path, newFilePath); // Move file safely
+                return `${baseUrl}/${newFilePath.replace(/\\/g, "/")}`; // Full URL
+            }));
+        }
+
+        // Check if subcategory exists (if changed)
+        if (subcategory && subcategory !== product.subcategory.toString()) {
+            const subCategoryExists = await SubCategory.findById(subcategory);
+            if (!subCategoryExists) {
+                return res.status(404).json({ success: false, message: "New SubCategory not found" });
+            }
         }
 
         // Update the product
@@ -141,9 +175,10 @@ exports.updateProduct = async (req, res) => {
             { new: true, runValidators: true }
         );
 
-        res.status(200).json({ success: true, message: "Product updated successfully", updatedProduct });
+        res.status(200).json({ success: true, message: "Product updated successfully", product: updatedProduct });
     } catch (error) {
-        res.status(500).json({ success: false, message: "Error updating product", error: error.message });
+        console.error("Error updating product:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
     }
 };
 
