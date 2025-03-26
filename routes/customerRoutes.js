@@ -9,7 +9,7 @@ const authMiddleware = require("../middlewares/authMiddleware");
 // Define Routes
 router.post("/register", customerController.registerCustomer);
 router.post("/verify-otp", customerController.verifyOTP);
-router.get("/:id", customerController.getCustomerById);
+router.get("/:id",  customerController.getCustomerById);
 router.put("/update", customerController.updateCustomer);
 router.delete("/:id", customerController.deleteCustomer);
 router.get("/",authMiddleware,customerController.getCustomer)
