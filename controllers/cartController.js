@@ -3,17 +3,17 @@ const Cart = require('../models/cart');
 // Add product to cart
 exports.addToCart = async (req, res) => {
     try {
-        const { userId, productId, image, size, quantity, price } = req.body;
+        const { userId, productId, size, color } = req.body;
         let cart = await Cart.findOne({ user: userId });
 
         if (!cart) {
-            cart = new Cart({ user: userId, products: [{ product: productId, image, size, quantity, price }] });
+            cart = new Cart({ user: userId, products: [{ product: productId, size, color }] });
         } else {
             const existingProduct = cart.products.find(item => item.product.toString() === productId && item.size === size);
             if (existingProduct) {
                 existingProduct.quantity += quantity;
             } else {
-                cart.products.push({ product: productId, image, size, quantity, price });
+                cart.products.push({ product: productId, size, color});
             }
         }
 
