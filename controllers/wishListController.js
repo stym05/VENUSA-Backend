@@ -10,11 +10,6 @@ exports.addToWishlist = async (req, res) => {
             return res.status(400).json({ message: 'User ID and Product ID are required' });
         }
 
-        // Check if they are valid ObjectId
-        if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(productId)) {
-            return res.status(400).json({ message: 'Invalid User ID or Product ID' });
-        }
-
         let wishlist = await Wishlist.findOne({ user: userId });
 
         if (!wishlist) {
