@@ -18,9 +18,9 @@ exports.addToCart = async (req, res) => {
         }
 
         await cart.save();
-        res.status(200).json({ message: 'Product added to cart', cart });
+        res.status(200).json({ success: true, code: 100, message: 'Product added to cart', cart });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ success: false, message: 'Server error', error: error.message });
     }
 };
 
@@ -31,12 +31,12 @@ exports.getCart = async (req, res) => {
         const cart = await Cart.findOne({ user: userId }).populate('products.product');
         
         if (!cart) {
-            return res.status(404).json({ message: 'Cart not found' });
+            return res.status(200).json({ success: true, code: 200,  message: 'Cart not found' });
         }
 
-        res.status(200).json({ cart });
+        res.status(200).json({ success: true, code: 100, cart });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ success: false, message: 'Server error', error: error.message });
     }
 };
 
@@ -47,13 +47,13 @@ exports.removeFromCart = async (req, res) => {
         const cart = await Cart.findOne({ user: userId });
 
         if (!cart) {
-            return res.status(404).json({ message: 'Cart not found' });
+            return res.status(404).json({ success: true, code: 200, message: 'Cart not found' });
         }
 
         cart.products = cart.products.filter(item => !(item.product.toString() === productId && item.size === size));
         await cart.save();
 
-        res.status(200).json({ message: 'Product removed from cart', cart });
+        res.status(200).json({ success: true, code : 100, message: 'Product removed from cart', cart });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
