@@ -22,7 +22,7 @@ const sendOtpEmail = async (email, otp) => {
   
 
   const mailOptions = {
-    from: process.env.GMAIL_USER,
+    from:  `VENUSA ${process.env.GMAIL_USER}`,
     to: email,
     subject: `VENUSA OTP is: ${otp}`,
     html: `<!DOCTYPE html>
@@ -90,4 +90,4 @@ const sendOtpEmail = async (email, otp) => {
 };
 
 module.exports = sendOtpEmail;
-// sendOtpEmail("manojkumarguntreddy.ima@gmail.com", 854125)
+// sendOtpEmail("satyamshady005@gmail.com", 854125)
