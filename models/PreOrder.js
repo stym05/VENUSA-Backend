@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-const CartSchema = new Schema({
+const PreOrderSchema = new Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // References User
     products: [{
         product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true }, // References Product
@@ -12,5 +12,5 @@ const CartSchema = new Schema({
     }]
 }, { timestamps: true });
 
-const Cart = mongoose.model('Cart', CartSchema);
-module.exports = Cart;
+const PreOrder = mongoose.model('PreOrder', PreOrderSchema);
+module.exports = PreOrder;

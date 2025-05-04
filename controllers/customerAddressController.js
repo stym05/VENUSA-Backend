@@ -30,6 +30,16 @@ const createAddress = async (req, res) => {
     }
 };
 
+
+const getAddress  = async (req, res) => {
+    try {
+        const address = await Address.find();
+        res.status(200).json({ success: true, address });
+    } catch ( error ) {
+        res.status(500).json({ success: false, message: "Failed to fetch addresses", error: error.message });
+    }
+}
+
 // ✅ Get all addresses for a customer
 const getAddressesByCustomer = async (req, res) => {
     try {
@@ -110,4 +120,4 @@ const setDefaultAddress = async (req, res) => {
 };
 
 
-module.exports = { createAddress, getAddressesByCustomer, getAddressById, updateAddress, deleteAddress, setDefaultAddress }
+module.exports = { createAddress, getAddressesByCustomer, getAddressById, updateAddress, deleteAddress, setDefaultAddress, getAddress }

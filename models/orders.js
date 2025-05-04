@@ -7,7 +7,8 @@ const OrderSchema = new Schema({
         product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true }, // References Product
         size: { type: String, required: true }, // Selected size (e.g., "M", "L", "XL")
         quantity: { type: Number, required: true }, // Number of items for this size
-        price: { type: Number, required: true } // Price per unit at time of purchase
+        price: { type: Number, required: true }, // Price per unit at time of purchase,
+        color: { type: String, required: false }
     }],
     shippingAddress: {
         street: { type: String, required: true },
@@ -23,10 +24,10 @@ const OrderSchema = new Schema({
         enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
         default: "Pending"
     },
-    paymentMethod: { type: String, enum: ["COD", "Credit Card", "Debit Card", "UPI"], required: true },
-    paymentStatus: { type: String, enum: ["Pending", "Completed", "Failed"], default: "Pending" },
-    trackingNumber: { type: String, default: null }, // Optional tracking number
-    placedAt: { type: Date, default: Date.now },
+    transactionDate: { type: Date, default: Date.now },
+  
+    razorpayPaymentId: { type: String },
+    razorpayOrderId: { type: String },
     deliveredAt: { type: Date }
 }, { timestamps: true });
 

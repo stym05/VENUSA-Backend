@@ -21,11 +21,12 @@ const AddressSchema = new Schema({
     city: { type: String, required: true, maxlength: 100 },
     state: { type: String, required: true, maxlength: 100 },
     postal_code: { type: String, required: true, maxlength: 20 },
-    country: { type: String, required: true, maxlength: 100 },
+    country: { type: String, required: true, maxlength: 100, default: "india" },
     is_default: { type: Boolean, default: false },
-    created_at: { type: Date, default: Date.now },
     mobile_number: { type: String, maxlength: 15, default: null },
     alternate_mobile_number: { type: String, maxlength: 15, default: null },
+}, {
+    timestamps: true
 });
 
 const Address = mongoose.model('Address', AddressSchema);
