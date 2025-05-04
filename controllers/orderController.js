@@ -2,6 +2,7 @@
 // import crypto from "crypto";
 // import config from "../config/config";
 
+const { default: mongoose } = require("mongoose");
 const PreOrder = require("../models/PreOrder");
 const { Users } = require("../models/Users");
 const { Customer } = require("../models/customers");
