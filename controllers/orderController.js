@@ -4,8 +4,11 @@
 
 const PreOrder = require("../models/PreOrder");
 const { Users } = require("../models/Users");
+const { Customer } = require("../models/customers");
 const Order = require("../models/orders");
 const sendCustomMail = require("../utils/sendCustomEmail");
+const { ObjectId } = mongoose.Types;
+
 
 const CreatePreOrder = async (req, res) => {
     try {
@@ -23,12 +26,12 @@ const CreatePreOrder = async (req, res) => {
             }
         }
 
-        const user = await Users.findOne({ _id: userId });
+        const user = await Customer.findOne({ _id: new ObjectId(userId) });
 
-        const { email, name } = user;
+        const { email, username } = user;
 
         await preOrder.save();
-        await sendPreOderConfirmationMail(name, "abhi2907singh@gmail.com");
+        await sendPreOderConfirmationMail(username, "abhi2907singh@gmail.com");
         res.status(200).json({ success: true, code: 100, message: 'Product added to preOrder', preOrder });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
