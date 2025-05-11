@@ -42,7 +42,7 @@ const getAllTables = async (req, res) => {
         res.status(200).json({
             success: true,
             code: 100,
-            response: data
+            data
         })
     } catch (err) {
         console.log("Error in getAllTables = ", err);

@@ -63,7 +63,8 @@ const validateOTPforUsers = async (req, res) => {
             })
         } else {
             return res.status(400).json({
-                success: 400,
+                success: false,
+                code: 400,
                 msg: "wrong otp. please try again"
             })
         }
