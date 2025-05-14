@@ -1,11 +1,25 @@
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const path = require('path');
-const s3 = require('../config/digitalOceanStorage');
+const { S3Client } = require('@aws-sdk/client-s3');
 
 // Define storage dynamically based on file type
+
+console.log({
+      accessKeyId: process.env.ACCESS_KEY_ID,
+      secretAccessKey: process.env.SECRET_KEY_ACCESS,
+    })
+
 const storage = multerS3({
-  s3: s3,
+  s3: new S3Client({
+    region: 'blr1',  // Replace with your Space's region
+    credentials: {
+      accessKeyId: process.env.ACCESS_KEY_ID,
+      secretAccessKey: process.env.SECRET_KEY_ACCESS,
+    },
+    endpoint: 'https://venusa-bucket.blr1.digitaloceanspaces.com',  // Replace with your Space's endpoint
+    forcePathStyle: true,  // Required for DigitalOcean Spaces
+  }),
   bucket: 'venusa-bucket', // Replace with your bucket name
   acl: 'public-read',
   key: function (req, file, cb) {
@@ -43,4 +57,5 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 } // Max 50MB
 });
 
+// Export the upload middleware
 module.exports = upload;
