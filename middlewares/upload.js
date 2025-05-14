@@ -3,12 +3,6 @@ const multerS3 = require('multer-s3');
 const path = require('path');
 const { S3Client } = require('@aws-sdk/client-s3');
 
-// Define storage dynamically based on file type
-
-console.log({
-      accessKeyId: process.env.ACCESS_KEY_ID,
-      secretAccessKey: process.env.SECRET_KEY_ACCESS,
-    })
 
 const storage = multerS3({
   s3: new S3Client({
