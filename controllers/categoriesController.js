@@ -1,10 +1,8 @@
-const Categorys = require("../models/categories");
-const fs = require("fs");
-const path = require("path");
+const mongoose = require("mongoose");
+const { Category } = require("../models/categories");
+const s3 = require('../config/digitalOceanStorage'); // S3 instance
 
-const { Category } = Categorys;
-
-
+// ✅ Create Category
 exports.createCategory = async (req, res) => {
     try {
         let { name } = req.body;
@@ -16,9 +14,8 @@ exports.createCategory = async (req, res) => {
 
         name = name.trim().toLowerCase(); // Normalize name for consistency
 
-        // Construct full image URL
-        const baseUrl = `${req.protocol}://${req.get("host")}`;
-        const image = req.file ? `${baseUrl}/${req.file.path.replace(/\\/g, "/")}` : null;
+        // Get image URL from multer-s3
+        const image = req.file ? req.file.location : null;
 
         // Check for existing category with the same name
         const existingCategory = await Category.findOne({ name });
@@ -36,7 +33,6 @@ exports.createCategory = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
     }
 };
-
 
 // ✅ Get all Categories
 exports.getAllCategories = async (req, res) => {
@@ -64,24 +60,22 @@ exports.getCategoryById = async (req, res) => {
     }
 };
 
-// ✅ Update Category
 exports.updateCategory = async (req, res) => {
     try {
         const { categoryId } = req.params;
         let updates = { ...req.body };
 
-        // Validate categoryId format
+        // Validate category ID
         if (!mongoose.Types.ObjectId.isValid(categoryId)) {
             return res.status(400).json({ success: false, message: "Invalid category ID" });
         }
 
-        // Check if category exists
         const category = await Category.findById(categoryId);
         if (!category) {
             return res.status(404).json({ success: false, message: "Category not found" });
         }
 
-        // Normalize name and check if it's already taken
+        // Normalize name and check for duplicates
         if (updates.name) {
             updates.name = updates.name.trim().toLowerCase();
             const existingCategory = await Category.findOne({ name: updates.name });
@@ -90,25 +84,21 @@ exports.updateCategory = async (req, res) => {
             }
         }
 
-        // Handle image upload
+        // Handle image update (if provided)
         if (req.file) {
-            const baseUrl = `${req.protocol}://${req.get("host")}`;
-            updates.categoryImage = `${baseUrl}/${req.file.path.replace(/\\/g, "/")}`; // Store full URL
+            updates.image = req.file.location;
 
-            // Delete old image only if a new one is uploaded
-            if (category.categoryImage) {
-                const oldImagePath = path.join(__dirname, "..", category.categoryImage.replace(baseUrl + "/", ""));
-                try {
-                    if (fs.existsSync(oldImagePath)) {
-                        await fs.promises.unlink(oldImagePath);
-                    }
-                } catch (unlinkError) {
-                    console.error("Error deleting old image:", unlinkError);
-                }
+            // Delete old image from DigitalOcean Space if it exists
+            if (category.image) {
+                const imageKey = category.image.split('/').pop();
+                await s3.deleteObject({
+                    Bucket: process.env.DO_SPACE_NAME,
+                    Key: `images/${imageKey}`,
+                }).promise();
             }
         }
 
-        // Update category
+        // Update the category
         const updatedCategory = await Category.findByIdAndUpdate(categoryId, updates, { new: true });
 
         res.status(200).json({ success: true, message: "Category updated successfully", category: updatedCategory });
@@ -117,19 +107,32 @@ exports.updateCategory = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
     }
 };
-// ✅ Delete Category
+
 exports.deleteCategory = async (req, res) => {
     try {
         const { categoryId } = req.params;
 
-        const deletedCategory = await Category.findByIdAndDelete(categoryId);
-        if (!deletedCategory) {
+        // Fetch the category to check if there's an image to delete
+        const category = await Category.findById(categoryId);
+        if (!category) {
             return res.status(404).json({ success: false, message: "Category not found" });
         }
 
+        // Delete the image from DigitalOcean Space (if it exists)
+        if (category.image) {
+            const imageKey = category.image.split('/').pop();
+            await s3.deleteObject({
+                Bucket: process.env.DO_SPACE_NAME,
+                Key: `images/${imageKey}`,
+            }).promise();
+        }
+
+        // Delete the category
+        await Category.findByIdAndDelete(categoryId);
+
         res.status(200).json({ success: true, message: "Category deleted successfully" });
     } catch (error) {
+        console.error("Error deleting category:", error);
         res.status(500).json({ success: false, message: "Error deleting category", error: error.message });
     }
 };
-

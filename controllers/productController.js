@@ -2,6 +2,7 @@ const Product = require("../models/products");
 const Category = require("../models/categories");
 const fs = require("fs");
 const path = require("path");
+const s3 = require("../config/digitalOceanStorage");
 
 const { SubCategory } = Category;
 
@@ -38,37 +39,19 @@ exports.createProduct = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid stock format" });
         }
 
-        // Create product first to get its _id
+        // Generate image URLs directly from the uploaded files
+        const images = req.files.map(file => file.location); // Multer-S3 provides the URL in `file.location`
+
+        // Create product and save
         const product = new Product({ 
             name, 
             description, 
             price, 
             subcategory, 
-            images: [], 
+            images, 
             colors: parsedColors, 
             stock: parsedStock 
         });
-        await product.save();
-
-        // Sanitize product name for folder creation
-        const sanitizedProductName = name.toLowerCase().replace(/\s+/g, "-");
-        const productFolder = path.join("uploads", `${sanitizedProductName}_${product._id}`);
-
-        // Create folder if it doesn't exist
-        if (!fs.existsSync(productFolder)) {
-            fs.mkdirSync(productFolder, { recursive: true });
-        }
-
-        // Move uploaded files to product-specific folder and store full URLs
-        const baseUrl = `${req.protocol}://${req.get("host")}`;
-        const images = await Promise.all(req.files.map(async (file) => {
-            const newFilePath = path.join(productFolder, file.filename);
-            await fs.promises.rename(file.path, newFilePath); // Move file safely
-            return `${baseUrl}/${newFilePath.replace(/\\/g, "/")}`; // Full URL
-        }));
-
-        // Update product with image paths
-        product.images = images;
         await product.save();
 
         // Add product reference to SubCategory
@@ -131,33 +114,24 @@ exports.updateProduct = async (req, res) => {
         let images = product.images; // Keep existing images if no new images are uploaded
 
         if (req.files && req.files.length > 0) {
-            const sanitizedProductName = product.name.toLowerCase().replace(/\s+/g, "-");
-            const productFolder = path.join("uploads", `${sanitizedProductName}_${product._id}`);
-
-            // Create folder if it doesn't exist
-            if (!fs.existsSync(productFolder)) {
-                fs.mkdirSync(productFolder, { recursive: true });
-            }
-
-            // Delete old images if new ones are uploaded
-            for (const image of product.images) {
-                const oldImagePath = path.join(__dirname, "..", image);
-                try {
-                    if (fs.existsSync(oldImagePath)) {
-                        await fs.promises.unlink(oldImagePath);
+            // Delete old images from DigitalOcean Spaces (optional)
+            if (images && images.length > 0) {
+                for (const imageUrl of images) {
+                    try {
+                        const fileName = imageUrl.split("/").pop();
+                        const params = {
+                            Bucket: process.env.DO_SPACE_NAME,
+                            Key: `images/${fileName}`,
+                        };
+                        await s3.deleteObject(params).promise();
+                    } catch (err) {
+                        console.error("Error deleting old image from Space:", err);
                     }
-                } catch (err) {
-                    console.error("Error deleting old image:", err);
                 }
             }
 
-            // Move new images and update image paths
-            const baseUrl = `${req.protocol}://${req.get("host")}`;
-            images = await Promise.all(req.files.map(async (file) => {
-                const newFilePath = path.join(productFolder, file.filename);
-                await fs.promises.rename(file.path, newFilePath); // Move file safely
-                return `${baseUrl}/${newFilePath.replace(/\\/g, "/")}`; // Full URL
-            }));
+            // Store new images from req.files
+            images = req.files.map(file => file.location); // Directly get URLs from Multer-S3
         }
 
         // Check if subcategory exists (if changed)
@@ -182,22 +156,44 @@ exports.updateProduct = async (req, res) => {
     }
 };
 
-
-// ✅ Delete Product
 exports.deleteProduct = async (req, res) => {
     try {
         const { productId } = req.params;
 
-        const deletedProduct = await Product.findByIdAndDelete(productId);
-        if (!deletedProduct) {
+        // Find the product before deleting to access its images
+        const product = await Product.findById(productId);
+        if (!product) {
             return res.status(404).json({ success: false, message: "Product not found" });
         }
 
+        // Delete images from DigitalOcean Spaces
+        if (product.images && product.images.length > 0) {
+            for (const imageUrl of product.images) {
+                try {
+                    // Extract the filename from the URL
+                    const fileName = imageUrl.split("/").pop();
+                    const params = {
+                        Bucket: process.env.DO_SPACE_NAME,
+                        Key: `images/${fileName}`,
+                    };
+                    await s3.deleteObject(params).promise();
+                    console.log(`Deleted: ${fileName} from DigitalOcean Space`);
+                } catch (err) {
+                    console.error("Error deleting image from Space:", err.message);
+                }
+            }
+        }
+
+        // Delete the product from the database
+        await product.deleteOne();
+
         res.status(200).json({ success: true, message: "Product deleted successfully" });
     } catch (error) {
+        console.error("Error deleting product:", error);
         res.status(500).json({ success: false, message: "Error deleting product", error: error.message });
     }
 };
+
 
 // ✅ Get Products by SubCategory
 exports.getProductsBySubCategory = async (req, res) => {

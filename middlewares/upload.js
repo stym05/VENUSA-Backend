@@ -1,29 +1,27 @@
 const multer = require('multer');
+const multerS3 = require('multer-s3');
 const path = require('path');
-const fs = require('fs');
+const s3 = require('../config/digitalOceanStorage');
 
 // Define storage dynamically based on file type
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    let uploadPath = 'uploads/other/'; // Default folder
+const storage = multerS3({
+  s3: s3,
+  bucket: 'venusa-bucket', // Replace with your bucket name
+  acl: 'public-read',
+  key: function (req, file, cb) {
+    let uploadPath = 'other/'; // Default folder
 
     // Define folder based on file type
     if (file.mimetype.startsWith('image/')) {
-      uploadPath = 'uploads/images/';
+      uploadPath = 'images/';
     } else if (file.mimetype.startsWith('video/')) {
-      uploadPath = 'uploads/videos/';
+      uploadPath = 'videos/';
     } else if (file.mimetype === 'application/pdf') {
-      uploadPath = 'uploads/documents/';
+      uploadPath = 'documents/';
     }
 
-    // Ensure folder exists
-    fs.mkdirSync(uploadPath, { recursive: true });
-
-    cb(null, uploadPath);
-  },
-  filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + path.extname(file.originalname);
-    cb(null, path.parse(file.originalname).name + '-' + uniqueSuffix);
+    cb(null, uploadPath + path.parse(file.originalname).name + '-' + uniqueSuffix);
   }
 });
 
@@ -38,7 +36,11 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Initialize multer
-const upload = multer({ storage, fileFilter, limits: { fileSize: 50 * 1024 * 1024 } }); // Max 50MB
+// Initialize multer with DigitalOcean Spaces storage
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 50 * 1024 * 1024 } // Max 50MB
+});
 
 module.exports = upload;
