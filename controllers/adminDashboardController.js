@@ -30,10 +30,10 @@ const getAllTables = async (req, res) => {
         const reviews = await Review.find();
         const wishlist = await Wishlist.find();
         const data = [
-            { name: "users", count: user.length },
+            // { name: "users", count: user.length },
             { name: "customer", count: customer.length },
             { name: "categorie", count: categories.length },
-            { name: "subCategorie", count: subcategories.length },
+            { name: "subcategorie", count: subcategories.length },
             { name: "cart", count: cartRoutes.length },
             { name: "product", count: products.length },
             { name: "review", count: reviews.length },
@@ -61,7 +61,7 @@ const getTableDetails = async (req, res) => {
         const Model = mongoose.model(Models[tableName]);
 
         // Fetch all data from the collection
-        const collectionData = await Model.find();
+        const collectionData = await Model.find().select("-__v");
 
         res.status(200).json({ success: true, code: 100, data: collectionData });
     } catch (err) {

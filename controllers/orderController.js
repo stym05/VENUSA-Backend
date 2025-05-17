@@ -4,7 +4,6 @@
 
 const { default: mongoose } = require("mongoose");
 const PreOrder = require("../models/PreOrder");
-const { Users } = require("../models/Users");
 const { Customer } = require("../models/customers");
 const Order = require("../models/orders");
 const sendCustomMail = require("../utils/sendCustomEmail");
