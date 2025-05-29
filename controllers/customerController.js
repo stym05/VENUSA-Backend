@@ -35,7 +35,7 @@ const verifyOTP = async (req, res) => {
 
         const existingCustomer = await Customers.Customer.findOne({ phone_number });
         console.log("existingCustomer is = ", existingCustomer.otp);
-        if(existingCustomer.otp && existingCustomer.otp != otp) {
+        if (existingCustomer.otp && existingCustomer.otp != otp) {
             return res.status(400).json({ message: "Invalid or expired OTP!" });
         }
 
@@ -56,11 +56,14 @@ const verifyOTP = async (req, res) => {
 const getCustomer = async (req, res) => {
     try {
         const customer = await Customers.Customer.find();
-        if (!customer) return res.status(404).json({ message: "Customer not found!" });
+        if (!customer) return res.status(404).json({ status: 404, success: false, message: "Customer not found!" });
 
-        res.json(customer);
+        res.json({
+            status: 100, success: true,
+            customers: customer
+        });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ status: 500, success: false, error: error.message });
     }
 };
 
