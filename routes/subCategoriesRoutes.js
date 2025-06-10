@@ -4,7 +4,7 @@ const subCategoryController = require("../controllers/subCategoryController");
 const upload = require("../middlewares/upload");
 const authMiddleware = require("../middlewares/authMiddleware");
 
-router.post("/",authMiddleware ,upload.single('image'), subCategoryController.createSubCategory);
+router.post("/" ,upload.single('image'), subCategoryController.createSubCategory);
 router.get("/", subCategoryController.getAllSubCategories);
 router.get("/:categoryId", subCategoryController.getSubCategoriesByCategory);
 router.put("/:subCategoryId", authMiddleware, upload.single('image'), subCategoryController.updateSubCategory);

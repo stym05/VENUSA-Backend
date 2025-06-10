@@ -5,6 +5,8 @@ const path = require("path");
 const s3 = require("../config/digitalOceanStorage");
 const { SubCategory, Category } = Categorys;
 
+const { PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+
 exports.createSubCategory = async (req, res) => {
     try {
         let { name, category, collection } = req.body;
@@ -31,16 +33,21 @@ exports.createSubCategory = async (req, res) => {
         if (req.file) {
             try {
                 const fileName = `subcategory-${Date.now()}-${req.file.originalname}`;
+                const key = `images/${fileName}`;
+
                 const params = {
                     Bucket: process.env.DO_SPACE_NAME,
-                    Key: `images/${fileName}`,
+                    Key: key,
                     Body: req.file.buffer,
                     ACL: "public-read",
                     ContentType: req.file.mimetype,
                 };
 
-                const uploadResult = await s3.upload(params).promise();
-                image = uploadResult.Location;
+                const command = new PutObjectCommand(params);
+                await s3.send(command);
+
+                // Manually construct the public URL
+                image = `https://venusa-bucket.blr1.digitaloceanspaces.com/${key}`;
             } catch (err) {
                 console.error("Error uploading image to Space:", err.message);
                 return res.status(500).json({ success: false, message: "Image upload failed" });
@@ -58,8 +65,9 @@ exports.createSubCategory = async (req, res) => {
 };
 
 
+
 exports.getAllSubCategories = async (req, res) => {
-    try {
+    try {   
         const subCategories = await SubCategory.find();
         res.status(200).json({ success: true, subCategories });
     } catch (error) {
@@ -92,28 +100,34 @@ exports.updateSubCategory = async (req, res) => {
         // Handle image update
         if (req.file) {
             try {
-                // Delete old image from Space
+                // Delete old image from Space if it exists
                 if (subCategory.image) {
                     const fileName = subCategory.image.split("/").pop();
-                    const params = {
+                    const deleteParams = {
                         Bucket: process.env.DO_SPACE_NAME,
                         Key: `images/${fileName}`,
                     };
-                    await s3.deleteObject(params).promise();
+
+                    const deleteCommand = new DeleteObjectCommand(deleteParams);
+                    await s3.send(deleteCommand);
                 }
 
                 // Upload new image to Space
                 const fileName = `subcategory-${Date.now()}-${req.file.originalname}`;
-                const params = {
+                const key = `images/${fileName}`;
+
+                const uploadParams = {
                     Bucket: process.env.DO_SPACE_NAME,
-                    Key: `images/${fileName}`,
+                    Key: key,
                     Body: req.file.buffer,
                     ACL: "public-read",
                     ContentType: req.file.mimetype,
                 };
 
-                const uploadResult = await s3.upload(params).promise();
-                updates.image = uploadResult.Location;
+                const uploadCommand = new PutObjectCommand(uploadParams);
+                await s3.send(uploadCommand);
+
+                updates.image = `https://venusa-bucket.blr1.digitaloceanspaces.com/${key}`;
             } catch (err) {
                 console.error("Error uploading image to Space:", err.message);
                 return res.status(500).json({ success: false, message: "Image update failed" });
@@ -138,15 +152,16 @@ exports.deleteSubCategory = async (req, res) => {
             return res.status(404).json({ success: false, message: "SubCategory not found" });
         }
 
-        // Delete image from Space if exists
+        // Delete image from Space if it exists
         if (subCategory.image) {
             try {
                 const fileName = subCategory.image.split("/").pop();
-                const params = {
+                const deleteParams = {
                     Bucket: process.env.DO_SPACE_NAME,
                     Key: `images/${fileName}`,
                 };
-                await s3.deleteObject(params).promise();
+                const deleteCommand = new DeleteObjectCommand(deleteParams);
+                await s3.send(deleteCommand);
                 console.log("Image deleted from Space:", fileName);
             } catch (err) {
                 console.error("Error deleting image from Space:", err.message);
