@@ -5,19 +5,16 @@ const OrderSchema = new Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // References User
     products: [{
         product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true }, // References Product
-        size: { type: String, required: true }, // Selected size (e.g., "M", "L", "XL")
-        quantity: { type: Number, required: true }, // Number of items for this size
-        price: { type: Number, required: true }, // Price per unit at time of purchase,
-        color: { type: String, required: false }
+        quantity: { type: Number, required: true, default: 1 }, // Quantity of the product in the order
+        price: { type: Number, required: true }, // Price of the product at the time of order
+        size: { type: String, required: true }, // Size of the product
+        color: { type: String, required: true } // Color of the product
     }],
-    shippingAddress: {
-        street: { type: String, required: true },
-        city: { type: String, required: true },
-        state: { type: String, required: true },
-        postalCode: { type: String, required: true },
-        country: { type: String, required: true },
-        mobileNumber: { type: String, required: true }
-    },
+    shippingAddress: { type: mongoose.Schema.Types.ObjectId, ref: 'Address', required: true }, // References Address
+    billingAddress: { type: mongoose.Schema.Types.ObjectId, ref: 'Address', required: true }, // References Address
+    trackingNumber: { type: String, unique: true }, // Unique tracking number for the order
+    discount_applied: { type: Number, default: 0 }, // Discount applied to the order
+    taxAmount: { type: Number, default: 0 }, // Tax amount for the order
     totalAmount: { type: Number, required: true }, // Total order price
     status: {
         type: String,

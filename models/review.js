@@ -9,6 +9,6 @@ const ReviewSchema = new Schema({
     images: [{ type: String }], // Array of image URLs
     createdAt: { type: Date, default: Date.now }
 });
-
+    
 const Review = mongoose.model('Review', ReviewSchema);
 module.exports = Review;

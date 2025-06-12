@@ -106,9 +106,14 @@ const createUser = async (req, res) => {
 const loginCustomer = async (req, res) => {
     try {
         const {
-            phone_number
+            userName
         } = req.body;
-        let customer = await Customer.findOne({ phone_number });
+        let customer;
+        if (isEmailValid(userName)) {
+            customer = await Customer.findOne({ email: userName });
+        } else {
+            customer = await Customer.findOne({ phone_number: userName });
+        }
         if (!customer) {
             // creating new user
             const otp = Math.floor(100000 + Math.random() * 900000)
@@ -129,7 +134,11 @@ const loginCustomer = async (req, res) => {
         } else {
             const otp = Math.floor(100000 + Math.random() * 900000)
             await Customer.updateOne({ _id: customer._id }, { $set: { otp: otp } });
-            await sendMsgToPhone(phone_number, otp);
+            if (isEmailValid(userName)) {
+                await sendOtpEmail(customer.email, otp);
+            } else {
+                await sendMsgToPhone(phone_number, otp);
+            }
             res.status(200).json({
                 success: true,
                 userId: customer._id,
@@ -151,13 +160,13 @@ const validateOTPforCustomers = async (req, res) => {
         const customer = await Customer.findOne({ _id: userId });
         if (otp == customer.otp) {
             if (!customer.isPhoneVerified || !customer.isEmailVerified) {
-                Users.updateOne({ _id: customer._id }, { $set: { isPhoneVerified: true, isEmailVerified: true } })
+                Customer.updateOne({ _id: customer._id }, { $set: { isPhoneVerified: true, isEmailVerified: true } })
             }
             const token = jwt.sign(
                 { id: customer._id, phone_number: customer.phone_number },
                 process.env.JWT_SECRET_KEY
             );
-            await Users.updateOne({ _id: customer._id }, { $set: { otp: null } })
+            await Customer.updateOne({ _id: customer._id }, { $set: { otp: null } })
             return res.status(200).json({
                 success: true,
                 code: 200,
