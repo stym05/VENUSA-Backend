@@ -123,20 +123,6 @@ exports.updateCategory = async (req, res) => {
                 console.error("Image upload failed:", err.message);
                 return res.status(500).json({ success: false, message: "Image upload failed" });
             }
-
-            // Delete old image from Space
-            if (category.image) {
-                const oldFileName = category.image.split("/").pop();
-                const deleteParams = {
-                    Bucket: process.env.DO_SPACE_NAME,
-                    Key: `images/${oldFileName}`,
-                };
-                try {
-                    await s3.send(new DeleteObjectCommand(deleteParams));
-                } catch (err) {
-                    console.error("Failed to delete old image from Space:", err.message);
-                }
-            }
         }
 
         const updatedCategory = await Category.findByIdAndUpdate(categoryId, updates, { new: true });
