@@ -118,7 +118,7 @@ exports.updateCategory = async (req, res) => {
 
             try {
                 await s3.send(new PutObjectCommand(uploadParams));
-                updates.image = `${process.env.BUCKET_URL}/${key}`; 
+                updates.image = `${process.env.BUCKET_URL}/venusa-bucket/${key}`; 
             } catch (err) {
                 console.error("Image upload failed:", err.message);
                 return res.status(500).json({ success: false, message: "Image upload failed" });
