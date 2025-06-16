@@ -119,13 +119,13 @@ const loginCustomer = async (req, res) => {
             const otp = Math.floor(100000 + Math.random() * 900000)
             customer = new Customer({
                 username: "New User",
-                phone_number,
-                email: `user${phone_number}@gmail.com`,
+                phone_number: userName,
+                email: `user${userName}@gmail.com`,
                 address: "new user",
                 otp
             });
             await customer.save();
-            await sendMsgToPhone(phone_number, otp);
+            await sendMsgToPhone(userName, otp);
             res.status(200).json({
                 success: true,
                 userId: customer._id,
@@ -137,12 +137,12 @@ const loginCustomer = async (req, res) => {
             if (isEmailValid(userName)) {
                 await sendOtpEmail(customer.email, otp);
             } else {
-                await sendMsgToPhone(phone_number, otp);
+                await sendMsgToPhone(customer.phone_number, otp);
             }
             res.status(200).json({
                 success: true,
                 userId: customer._id,
-                msg: `otp send to Mobile Number ${phone_number}`
+                msg: `otp send to Mobile Number ${userName}`
             })
         }
     } catch (err) {
