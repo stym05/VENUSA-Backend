@@ -12,44 +12,41 @@ exports.createCategory = async (req, res) => {
             return res.status(400).json({ success: false, message: "Category name is required" });
         }
 
-        name = name.trim().toLowerCase();
-
-        // Check for duplicate category
         const existingCategory = await Category.findOne({ name });
         if (existingCategory) {
             return res.status(400).json({ success: false, message: "Category already exists" });
         }
 
-        // Handle image upload to DigitalOcean Spaces
+        // Handle image - multer-s3 has already uploaded the file
         let image = null;
         if (req.file) {
-            const fileName = `category-${Date.now()}-${req.file.originalname}`;
-            const key = `images/${fileName}`;
-
-            const uploadParams = {
-                Bucket: process.env.DO_SPACE_NAME,
-                Key: key,
-                Body: req.file.buffer,
-                ACL: "public-read",
-                ContentType: req.file.mimetype,
-            };
-
-            try {
-                await s3.send(new PutObjectCommand(uploadParams));
-                image = `${process.env.BUCKET_URL}/${key}`;
-            } catch (err) {
-                console.error("Image upload failed:", err.message);
-                return res.status(500).json({ success: false, message: "Image upload failed" });
-            }
+            // The file is already uploaded by multer-s3
+            // req.file.location contains the full URL to the uploaded file
+            image = req.file.location;
+            
+            console.log('File uploaded successfully:', {
+                originalName: req.file.originalname,
+                key: req.file.key,
+                location: req.file.location,
+                size: req.file.size
+            });
         }
 
         const category = new Category({ name, image });
         await category.save();
 
-        res.status(201).json({ success: true, message: "Category created successfully", category });
+        res.status(201).json({ 
+            success: true, 
+            message: "Category created successfully", 
+            category 
+        });
     } catch (error) {
         console.error("Error creating category:", error);
-        res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: "Internal Server Error", 
+            error: error.message 
+        });
     }
 };
 
@@ -103,40 +100,63 @@ exports.updateCategory = async (req, res) => {
             }
         }
 
-        // Handle image update
+        // Handle image update - multer-s3 has already uploaded the new file
         if (req.file) {
-            const fileName = `category-${Date.now()}-${req.file.originalname}`;
-            const key = `images/${fileName}`;
-
-            const uploadParams = {
-                Bucket: process.env.DO_SPACE_NAME,
-                Key: key,
-                Body: req.file.buffer,
-                ACL: "public-read",
-                ContentType: req.file.mimetype,
-            };
-
-            try {
-                await s3.send(new PutObjectCommand(uploadParams));
-                updates.image = `${process.env.BUCKET_URL}/venusa-bucket/${key}`; 
-            } catch (err) {
-                console.error("Image upload failed:", err.message);
-                return res.status(500).json({ success: false, message: "Image upload failed" });
+            // Delete old image if it exists
+            if (category.image) {
+                try {
+                    // Extract the key from the old image URL
+                    const oldImageKey = extractKeyFromUrl(category.image);
+                    if (oldImageKey) {
+                        const deleteParams = {
+                            Bucket: process.env.DO_SPACE_NAME || 'venusa-bucket',
+                            Key: oldImageKey,
+                        };
+                        await s3.send(new DeleteObjectCommand(deleteParams));
+                        console.log(`Old image deleted: ${oldImageKey}`);
+                    }
+                } catch (err) {
+                    console.error("Error deleting old image:", err.message);
+                    // Continue with update even if old image deletion fails
+                }
             }
+
+            // Set new image URL from multer-s3 upload
+            updates.image = req.file.location;
+            
+            console.log('New image uploaded:', {
+                originalName: req.file.originalname,
+                key: req.file.key,
+                location: req.file.location,
+                size: req.file.size
+            });
         }
 
         const updatedCategory = await Category.findByIdAndUpdate(categoryId, updates, { new: true });
 
-        res.status(200).json({ success: true, message: "Category updated successfully", category: updatedCategory });
+        res.status(200).json({ 
+            success: true, 
+            message: "Category updated successfully", 
+            category: updatedCategory 
+        });
     } catch (error) {
         console.error("Error updating category:", error);
-        res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: "Internal Server Error", 
+            error: error.message 
+        });
     }
 };
 
 exports.deleteCategory = async (req, res) => {
     try {
         const { categoryId } = req.params;
+
+        // Validate category ID
+        if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+            return res.status(400).json({ success: false, message: "Invalid category ID" });
+        }
 
         // Find the category by ID
         const category = await Category.findById(categoryId);
@@ -146,26 +166,63 @@ exports.deleteCategory = async (req, res) => {
 
         // Delete the image from DigitalOcean Space (if exists)
         if (category.image) {
-            const imageKey = category.image.split("/").pop();
-            const deleteParams = {
-                Bucket: process.env.DO_SPACE_NAME,
-                Key: `images/${imageKey}`,
-            };
-
             try {
-                await s3.send(new DeleteObjectCommand(deleteParams));
-                console.log(`Image deleted from Space: ${imageKey}`);
+                const imageKey = extractKeyFromUrl(category.image);
+                if (imageKey) {
+                    const deleteParams = {
+                        Bucket: process.env.DO_SPACE_NAME || 'venusa-bucket',
+                        Key: imageKey,
+                    };
+                    await s3.send(new DeleteObjectCommand(deleteParams));
+                    console.log(`Image deleted from Space: ${imageKey}`);
+                }
             } catch (err) {
                 console.error("Error deleting image from Space:", err.message);
+                // Continue with category deletion even if image deletion fails
             }
         }
 
         // Delete the category document
         await Category.findByIdAndDelete(categoryId);
 
-        res.status(200).json({ success: true, message: "Category deleted successfully" });
+        res.status(200).json({ 
+            success: true, 
+            message: "Category deleted successfully" 
+        });
     } catch (error) {
         console.error("Error deleting category:", error);
-        res.status(500).json({ success: false, message: "Error deleting category", error: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: "Error deleting category", 
+            error: error.message 
+        });
     }
 };
+
+// Helper function to extract the key from DigitalOcean Spaces URL
+function extractKeyFromUrl(imageUrl) {
+    if (!imageUrl) return null;
+    
+    try {
+        // Handle different URL formats:
+        // https://venusa-bucket.blr1.digitaloceanspaces.com/images/filename.jpg
+        // https://venusa-bucket.blr1.digitaloceanspaces.com/images/category-name-123456.jpg
+        
+        const url = new URL(imageUrl);
+        const pathname = url.pathname;
+        
+        // Remove leading slash and return the key
+        return pathname.startsWith('/') ? pathname.substring(1) : pathname;
+    } catch (error) {
+        console.error('Error extracting key from URL:', error);
+        
+        // Fallback: try to extract from URL string
+        const parts = imageUrl.split('/');
+        if (parts.length >= 2) {
+            // Get the last two parts (folder/filename)
+            return parts.slice(-2).join('/');
+        }
+        
+        return null;
+    }
+}
