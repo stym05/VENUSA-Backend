@@ -6,6 +6,7 @@ const Review = require("../models/review");
 const { Users } = require("../models/Users");
 const Wishlist = require("../models/wishlist");
 const mongoose = require("mongoose");
+const Order = require("../models/Order");
 
 const Models = {
     users: "Users",
@@ -30,6 +31,7 @@ const getAllTables = async (req, res) => {
         const products = await Product.find();
         const reviews = await Review.find();
         const wishlist = await Wishlist.find();
+        const order = await Order.find();
         const data = [
             // { name: "users", count: user.length },
             { name: "customer", count: customer.length },
@@ -38,7 +40,8 @@ const getAllTables = async (req, res) => {
             { name: "cart", count: cartRoutes.length },
             { name: "product", count: products.length },
             { name: "review", count: reviews.length },
-            { name: "wishlist", count: wishlist.length }
+            { name: "wishlist", count: wishlist.length },
+            { name: "Order", count: order.length }
         ];
         res.status(200).json({
             success: true,
