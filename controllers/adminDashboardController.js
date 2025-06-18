@@ -14,6 +14,7 @@ const Models = {
     subcategorie: "SubCategory",
     cart: "Cart",
     product: "Product",
+    order: "Order",
     review: "Review",
     wishlist: "Wishlist"
 };
