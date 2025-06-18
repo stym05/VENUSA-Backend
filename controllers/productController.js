@@ -10,7 +10,29 @@ const { SubCategory } = Category;
 
 exports.createProduct = async (req, res) => {
     try {
-        const { name, description, price, subcategory, colors, stock } = req.body;
+        const { 
+            name, 
+            description, 
+            price, 
+            material,
+            sku,
+            category,
+            subcategory, 
+            discount,
+            isActive,
+            key_features,
+            tags,
+            colors, 
+            stock 
+        } = req.body;
+
+        // Validate required fields
+        if (!name || !price || !material || !sku || !category || !subcategory) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing required fields: name, price, material, sku, category, and subcategory are required"
+            });
+        }
 
         // Ensure between 4 and 6 images are uploaded
         if (!req.files || req.files.length < 4 || req.files.length > 6) {
@@ -27,17 +49,17 @@ exports.createProduct = async (req, res) => {
         }
 
         // Parse JSON fields safely
-        let parsedColors, parsedStock;
+        let parsedColors, parsedStock, parsedKeyFeatures, parsedTags;
         try {
             parsedColors = JSON.parse(colors);
-        } catch (err) {
-            return res.status(400).json({ success: false, message: "Invalid colors format" });
-        }
-
-        try {
             parsedStock = JSON.parse(stock);
+            parsedKeyFeatures = JSON.parse(key_features);
+            parsedTags = JSON.parse(tags);
         } catch (err) {
-            return res.status(400).json({ success: false, message: "Invalid stock format" });
+            return res.status(400).json({ 
+                success: false, 
+                message: "Invalid format for colors, stock, key_features, or tags" 
+            });
         }
 
         // Upload images to DigitalOcean Spaces
@@ -71,7 +93,14 @@ exports.createProduct = async (req, res) => {
             name,
             description,
             price,
+            material,
+            sku,
+            category,
             subcategory,
+            discount: discount || 0,
+            isActive: isActive === 'true',
+            key_features: parsedKeyFeatures,
+            tags: parsedTags,
             images,
             colors: parsedColors,
             stock: parsedStock
