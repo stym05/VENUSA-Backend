@@ -84,7 +84,7 @@ const createUser = async (req, res) => {
             isAdmin,
             address,
         } = req.body;
-        if (isEmailValid(email) || validatePhonetNumber(phone_number)) {
+        if (!(isEmailValid(email) || validatePhonetNumber(phone_number))) {
             res.status(401).json({ error: "phone number or email is not valid" })
         }
         const user = new Users({ email, phone_number, isAdmin, address });
