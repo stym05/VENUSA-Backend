@@ -26,7 +26,7 @@ export const signupMail = (customerName) => {
                         <a href="https://www.instagram.com/venusa.co.in" style="color: #e91e63; text-decoration: none;">@venusa.co.in</a> | 
                         <a href="https://www.venusa.co.in" style="color: #e91e63; text-decoration: none;">venusa.co.in</a>
                       </p>
-                      <p style="margin-top: 30px;">Let’s make something unforgettable.<br><strong>– Team Venusa</strong><br><em>Born to stand out.</em></p>
+                      <p style="margin-top: 30px;">Let’s make something unforgettable.<br><strong>– Team VENUSA</strong><br><em>Born to stand out.</em></p>
                     </td>
                   </tr>
                 </table>
